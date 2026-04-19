@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Tumor Classification</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            margin-bottom: 25px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .upload-section {
+            text-align: center;
+        }
+
+        input[type="file"] {
+            margin: 15px 0;
+        }
+
+        .preview-box {
+            margin-top: 20px;
+        }
+
+        .preview-box img {
+            max-width: 300px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        button {
+            background: #1877f2;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #subResult {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-box {
+            background: #f9fbff;
+            border-left: 5px solid #1877f2;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+        <h1>Brain Tumor Classification</h1>
+
+        <div class="upload-section">
+
+            <input type="file" id="imageInput" accept=".png,.jpg,.jpeg">
+
+            <div class="preview-box">
+                <img id="preview" alt="Image Preview">
+            </div>
+
+            <button type="button" id="predictBtn">Predict</button>
+
+            <div id="result"></div>
+            <div id="subResult"></div>
+
+            <p>Supported image formats: PNG, JPG, JPEG</p>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Model Performance</h2>
+
+        <div class="performance-grid">
+            <div class="metric-box">
+                <p>Training Accuracy</p>
+                <div class="metric-value">96.5%</div>
+            </div>
+
+            <div class="metric-box">
+                <p>Validation Accuracy</p>
+                <div class="metric-value">94.8%</div>
+            </div>
+
+            <div class="metric-box">
+                <p>Model Type</p>
+                <div class="metric-value">MobileNetV2</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ✅ JAVASCRIPT (IMPORTANT PART) -->
+<script>
+const imageInput = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+const predictBtn = document.getElementById("predictBtn");
+const resultBox = document.getElementById("result");
+const subResultBox = document.getElementById("subResult");
+
+imageInput.addEventListener("change", function () {
+    const file = this.files[0];
+
+    if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+    } else {
+        preview.style.display = "none";
+    }
+
+    resultBox.innerHTML = "";
+    subResultBox.innerHTML = "";
+});
+
+predictBtn.addEventListener("click", async function () {
+
+    if (!imageInput.files.length) {
+        resultBox.innerHTML = "Please upload an image first";
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", imageInput.files[0]);
+
+    resultBox.innerHTML = "Predicting...";
+
+    try {
+        const response = await fetch("/predict", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            resultBox.innerHTML = "Prediction: " + data.prediction;
+            subResultBox.innerHTML = "Confidence: " + data.confidence + "%";
+        } else {
+            resultBox.innerHTML = "Error: " + data.error;
+        }
+
+    } catch (error) {
+        resultBox.innerHTML = "Server error";
+    }
+});
+</script>
+
+</body>
+</html>
