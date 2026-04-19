@@ -8,7 +8,7 @@ import random
 BASE_DIR = Path(_file_).resolve().parent
 UPLOAD_FOLDER = BASE_DIR / "uploads"
 
-app = Flask(_name_)
+app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB max upload
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 
@@ -86,6 +86,6 @@ def predict():
         }), 500
 
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
