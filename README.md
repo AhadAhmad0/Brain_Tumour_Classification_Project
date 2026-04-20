@@ -1,61 +1,126 @@
-🧠 Brain Tumor Classification using Deep Learning:
+🧠 Brain Tumor Classification (Deep Learning + Flask):
 
-📌 Overview:
+A web-based application that predicts whether a brain MRI scan contains a tumor using deep learning.
+This project demonstrates an end-to-end machine learning pipeline, including model training, optimization, and real-world deployment handling.
 
-This project is a deep learning-based web application that classifies brain MRI images into different tumor categories. The system uses a convolutional neural network (CNN) model integrated with a Flask backend to provide predictions through a simple and interactive web interface.
-The application allows users to upload MRI images and receive predictions along with confidence scores.
+🚀 Live Demo:
+🔗  [Brain Tumor Classification Web App](https://brain-tumour-classification-project-24.onrender.com)
 
-🚀 Features:
+📌 Project Overview:
 
-1.📤 Upload MRI images (PNG, JPG, JPEG)
-2.🧠 Predict tumor type using deep learning
-3.📊 Displays prediction confidence
-4.🌐 Web-based interface using Flask
-5.⚡ Lightweight model for efficient deployment
-6.🧪 Model Details
+This application allows users to:
+1.📤 Upload an MRI brain image
+2.🖼️ View image preview
+3.🧠 Get prediction:
+  ->Tumor
+  ->No Tumor
+  
+📊 View confidence score:
 
-🔹 Original Approach (VGG-based Model):
+The system integrates:
+1.Flask (Backend)
+2.HTML/CSS/JS (Frontend)
+3.TensorFlow/Keras (Model Training)
 
-Initially, the project used a VGG-based transfer learning model with frozen layers. While this model provided strong performance, it had limitations:
-❌ Large model size (not suitable for GitHub upload limits)
-❌ Deployment challenges on platforms like Render
-❌ Dependency compatibility issues during deployment
+🧠 Model Development Journey:
 
-🔹 Optimized Approach (Lightweight Model):
+🔹 Initial Approach: VGG19 (Transfer Learning)
+The project initially used a VGG19-based model with frozen layers for feature extraction.
+⚠️ Challenges with VGG Model
+❌ Large model size (hundreds of MB)
+❌ Not suitable for GitHub upload limits
+❌ Slow inference time
+❌ High memory usage during deployment
+❌ TensorFlow/Keras compatibility issues on cloud platforms (Render)
+❌ Serialization/loading errors (e.g., layer config mismatches)
+👉 Result:
+Although VGG performed reasonably well, it was not practical for deployment
 
-To ensure smooth deployment and accessibility, a lightweight model was developed:
-✅ Smaller model size (~30MB)
-✅ Faster inference
-✅ Compatible with deployment environments (Render)
-✅ Easier integration with Flask
-This approach balances performance and deployability, making the project practical for real-world use.
+🔹 Final Approach: Lightweight Model (MobileNetV2)
+To overcome these issues, the model was redesigned using MobileNetV2.
+✅ Advantages
+✔️ Small model size (~30MB)
+✔️ Faster inference
+✔️ Lower memory usage
+✔️ Deployment-friendly
+✔️ Better compatibility with cloud environments
 
 📊 Model Performance:
+Metric Value
+Training Accuracy
+93.6%
+Validation Accuracy
+88.0%
+These metrics are obtained from the final lightweight model.
 
-Training Accuracy: 96.5%
-Validation Accuracy: 94.8%
-Architecture: MobileNetV2 / Lightweight CNN
-Note: Performance may vary depending on dataset and environment.
+⚙️ Model Inference Strategy (Hybrid System):
 
-🏗️ Tech Stack:
+This project uses a hybrid inference approach to ensure reliability across environments.
+🔹 Primary: Model-Based Prediction
+Uses final_model.h5
+Performs real deep learning inference
+Returns prediction + confidence
+🔹 Fallback Mechanism
 
-1.Frontend: HTML, CSS, JavaScript
-2.Backend: Flask (Python)
-3.Machine Learning: TensorFlow / Keras
-4.Deployment: Render
-5.Image Processing: PIL, NumPy
+If the model cannot load due to:
+1.dependency conflicts
+2.environment limitations
+3.TensorFlow compatibility issues
+Then the system:
+->processes the image
+->uses intensity + contrast features
+->returns prediction and confidence
 
-⚠️ Limitations & Challenges:
+🎯 Why Hybrid?
+1.Ensures application never breaks
+2.Guarantees deployment stability
+3.Demonstrates real-world engineering thinking
+4.Handles practical ML deployment challenges
 
-Large deep learning models (like VGG) are difficult to deploy due to:
-1.size constraints
-2.dependency mismatches
-3.Lightweight models may slightly trade off accuracy for deployability
+🧪 Training Pipeline (Notebook):
 
-💡 Future Improvements:
+1.The project includes a Jupyter Notebook covering:
+2.Data preprocessing
+3.Image augmentation
+4.Transfer learning (MobileNetV2)
+5.Training & fine-tuning
+6.Model evaluation
+7.Model saving
 
-1.Deploy full VGG/ResNet model using cloud storage or APIs
-2.Add Grad-CAM visualization for interpretability
-3.Improve UI/UX
-4.Add multi-image batch prediction
-5.Integrate database for history tracking
+⚠️ Deployment Note:
+
+Deep learning models often face deployment challenges due to:
+->environment inconsistencies
+->dependency conflicts
+->hardware limitations
+
+This project addresses those challenges using:
+-> a lightweight model
+-> a hybrid fallback mechanism
+-> The notebook contains the complete ML workflow, while the deployed app ensures consistent usability.
+
+💡 Key Highlights:
+
+1.End-to-end ML pipeline
+2.Lightweight optimized model
+3.Flask web application
+4.Hybrid inference system
+5.Real-world deployment handling
+6.Clean and responsive UI
+
+🧠 Skills Demonstrated:
+
+1.Deep Learning (CNN, Transfer Learning)
+2.TensorFlow / Keras
+3.Flask Backend Development
+4.Model Deployment
+5.Debugging & Optimization
+6.Practical Problem Solving
+
+🔮 Future Improvements:
+
+1.Multi-class tumor classification
+2.Model quantization (faster inference)
+3.Docker containerization
+4.API-based deployment
+5.Grad-CAM visualization
