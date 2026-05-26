@@ -124,3 +124,5 @@ This project addresses those challenges using:
 3.Docker containerization
 4.API-based deployment
 5.Grad-CAM visualization
+
+<img width="1871" height="906" alt="Screenshot 2026-05-26 171624" src="https://github.com/user-attachments/assets/02adad6d-4551-4058-ba42-88bb2a19b5c2" />
