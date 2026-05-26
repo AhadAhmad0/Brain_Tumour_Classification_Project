@@ -126,3 +126,6 @@ This project addresses those challenges using:
 5.Grad-CAM visualization
 
 <img width="1871" height="906" alt="Screenshot 2026-05-26 171624" src="https://github.com/user-attachments/assets/02adad6d-4551-4058-ba42-88bb2a19b5c2" />
+
+<img width="1895" height="617" alt="Screenshot 2026-05-26 171638" src="https://github.com/user-attachments/assets/a9ab16dd-1ada-43b4-ab24-6042070569ef" />
+
