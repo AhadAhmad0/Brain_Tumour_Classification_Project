@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Brain Tumor Classifier</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:       #0a0d12;
+      --surface:  #111620;
+      --border:   #1e2535;
+      --accent:   #00c8ff;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --positive: #22d3a5;
+      --warning:  #ff4d6d;
+      --mono:     'IBM Plex Mono', monospace;
+      --sans:     'IBM Plex Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px 60px; }
+
+    header {
+      max-width: 900px; margin: 0 auto 36px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 20px; border-bottom: 1px solid var(--border);
+    }
+    .logo { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; }
+    .status-pill {
+      font-family: var(--mono); font-size: 11px; padding: 4px 12px;
+      border-radius: 100px; border: 1px solid var(--border); color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: pulse 2s infinite; }
+    .status-pill.ready { color: var(--positive); border-color: #22d3a530; }
+    .status-pill.ready .dot { background: var(--positive); }
+    .status-pill.error  { color: var(--warning);  border-color: #ff4d6d30; }
+    .status-pill.error .dot  { background: var(--warning); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .main { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:680px){ .main{grid-template-columns:1fr} header{flex-direction:column;gap:12px;align-items:flex-start} }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .card.full { grid-column: 1 / -1; }
+    .card-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+
+    .drop-zone {
+      border: 1.5px dashed var(--border); border-radius: 8px; padding: 32px 16px;
+      text-align: center; cursor: pointer; transition: border-color .2s, background .2s; position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: #00c8ff08; }
+    .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+    .drop-text { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .drop-text strong { color: var(--accent); font-weight: 500; }
+
+    #previewWrap { display: none; margin-top: 16px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); aspect-ratio: 1; max-height: 200px; }
+    #previewWrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .btn { width: 100%; margin-top: 16px; padding: 13px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.06em; cursor: pointer; transition: opacity .2s, transform .1s; }
+    .btn:hover:not(:disabled) { opacity: .88; }
+    .btn:active:not(:disabled) { transform: scale(.98); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .result-panel { display: flex; flex-direction: column; justify-content: center; min-height: 280px; }
+    .result-idle { text-align: center; color: var(--muted); }
+    .result-idle .big-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+    .result-idle p { font-size: 13px; line-height: 1.6; }
+    .result-data { display: none; }
+
+    .result-label { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+    .result-value { font-family: var(--mono); font-size: 28px; font-weight: 600; line-height: 1.1; margin-bottom: 6px; }
+    .result-desc  { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+
+    /* All-class probability bars */
+    .prob-bars { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .prob-row { display: flex; flex-direction: column; gap: 4px; }
+    .prob-header { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; }
+    .prob-name  { color: var(--text); }
+    .prob-val   { color: var(--muted); }
+    .prob-bar-bg   { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .prob-bar-fill { height: 100%; border-radius: 3px; width: 0%; transition: width .8s cubic-bezier(.4,0,.2,1); }
+
+    .disclaimer { margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--warning); font-size: 12px; color: var(--muted); line-height: 1.6; display: none; }
+    .error-box  { margin-top: 12px; padding: 12px; border: 1px solid #ff4d6d30; border-radius: 8px; background: #ff4d6d08; font-family: var(--mono); font-size: 12px; color: var(--warning); display: none; }
+
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #00000040; border-top-color: #000; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Metrics */
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .metric-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+    .metric-item .m-label { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+    .metric-item .m-value { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--accent); }
+    .metric-item .m-value.text { font-size: 13px; }
+
+    /* Per-class table */
+    .per-class-title { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px; }
+    .per-class-grid  { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+    .pc-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+    .pc-name  { font-family: var(--mono); font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+    .pc-stats { display: flex; gap: 12px; }
+    .pc-stat  { display: flex; flex-direction: column; gap: 2px; }
+    .pc-stat-label { font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .pc-stat-val   { font-family: var(--mono); font-size: 14px; font-weight: 600; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width:480px){ .info-grid{grid-template-columns:1fr} }
+    .info-block h4 { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+    .info-block p  { font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .class-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .class-tag  { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); }
+
+    footer { max-width: 900px; margin: 40px auto 0; text-align: center; font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⬡ Brain Tumor Classifier</div>
+  <div class="status-pill" id="statusPill">
+    <span class="dot"></span>
+    <span id="statusText">Checking model...</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- Upload -->
+  <div class="card">
+    <div class="card-label">01 — Input</div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="imageInput" accept=".png,.jpg,.jpeg"/>
+      <span class="drop-icon">🧠</span>
+      <div class="drop-text">
+        <strong>Click to upload</strong> or drag & drop<br>
+        MRI brain scan image<br>
+        <span style="font-size:11px">PNG · JPG · JPEG · max 5MB</span>
+      </div>
+    </div>
+    <div id="previewWrap"><img id="preview" alt="MRI Preview"/></div>
+    <button class="btn" id="predictBtn" disabled>Run Classification</button>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <!-- Result -->
+  <div class="card result-panel">
+    <div class="card-label">02 — Result</div>
+    <div class="result-idle" id="resultIdle">
+      <span class="big-icon">📡</span>
+      <p>Upload an MRI scan and click<br><strong style="color:var(--text)">Run Classification</strong><br>to see the prediction.</p>
+    </div>
+    <div class="result-data" id="resultData">
+      <div class="result-label">Prediction</div>
+      <div class="result-value" id="predLabel">—</div>
+      <div class="result-desc"  id="predDesc">—</div>
+
+      <div class="result-label">Class Probabilities</div>
+      <div class="prob-bars" id="probBars"></div>
+
+      <div class="disclaimer" id="disclaimer">
+        ⚠️ For educational and research use only. Not a medical device. Do not use for clinical diagnosis.
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="card full">
+    <div class="card-label">03 — Model Performance</div>
+    <div class="metrics-grid">
+      <div class="metric-item"><div class="m-label">Test Accuracy</div><div class="m-value" id="mAcc">—</div></div>
+      <div class="metric-item"><div class="m-label">F1 Score</div><div class="m-value" id="mF1">—</div></div>
+      <div class="metric-item"><div class="m-label">Precision</div><div class="m-value" id="mPrec">—</div></div>
+      <div class="metric-item"><div class="m-label">Recall</div><div class="m-value" id="mRec">—</div></div>
+      <div class="metric-item"><div class="m-label">Architecture</div><div class="m-value text" id="mArch">—</div></div>
+      <div class="metric-item"><div class="m-label">Classes</div><div class="m-value text" id="mClasses">—</div></div>
+      <div class="metric-item"><div class="m-label">Train Samples</div><div class="m-value text" id="mTrain">—</div></div>
+      <div class="metric-item"><div class="m-label">Test Samples</div><div class="m-value text" id="mTest">—</div></div>
+    </div>
+
+    <div class="per-class-title">Per-Class Metrics</div>
+    <div class="per-class-grid" id="perClassGrid"></div>
+  </div>
+
+  <!-- About -->
+  <div class="card full">
+    <div class="card-label">04 — About</div>
+    <div class="info-grid">
+      <div class="info-block">
+        <h4>How it works</h4>
+        <p>EfficientNetB0 pre-trained on ImageNet was fine-tuned on 7,023 brain MRI images across 4 classes. Transfer learning with a frozen base followed by selective fine-tuning of the last 30 layers.</p>
+      </div>
+      <div class="info-block">
+        <h4>Output Classes</h4>
+        <div class="class-tags">
+          <span class="class-tag" style="border-color:#ff4d6d40;color:#ff4d6d">Glioma</span>
+          <span class="class-tag" style="border-color:#ff9f4340;color:#ff9f43">Meningioma</span>
+          <span class="class-tag" style="border-color:#22d3a540;color:#22d3a5">No Tumor</span>
+          <span class="class-tag" style="border-color:#a29bfe40;color:#a29bfe">Pituitary</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>EfficientNetB0 · TensorFlow 2.19 · Flask · 7,023 MRI images · For educational use only</footer>
+
+<script>
+  const imageInput  = document.getElementById("imageInput");
+  const dropZone    = document.getElementById("dropZone");
+  const preview     = document.getElementById("preview");
+  const previewWrap = document.getElementById("previewWrap");
+  const predictBtn  = document.getElementById("predictBtn");
+  const errorBox    = document.getElementById("errorBox");
+  const resultIdle  = document.getElementById("resultIdle");
+  const resultData  = document.getElementById("resultData");
+
+  const CLASS_COLORS = {
+    "Glioma":     "#ff4d6d",
+    "Meningioma": "#ff9f43",
+    "No Tumor":   "#22d3a5",
+    "Pituitary":  "#a29bfe"
+  };
+
+  // Health check
+  async function checkHealth() {
+    try {
+      const data = await fetch("/health").then(r => r.json());
+      const pill = document.getElementById("statusPill");
+      const txt  = document.getElementById("statusText");
+      if (data.model_loaded) {
+        pill.className = "status-pill ready";
+        txt.textContent = "Model ready";
+      } else {
+        pill.className = "status-pill error";
+        txt.textContent = "Model unavailable";
+        showError("Model failed to load: " + (data.model_error || "unknown"));
+        predictBtn.disabled = true;
+      }
+    } catch {
+      document.getElementById("statusPill").className = "status-pill error";
+      document.getElementById("statusText").textContent = "Server unreachable";
+    }
+  }
+
+  // Load metrics
+  async function loadMetrics() {
+    try {
+      const d = await fetch("/metrics").then(r => r.json());
+      document.getElementById("mAcc").textContent    = d.test_accuracy + "%";
+      document.getElementById("mF1").textContent     = d.f1_score + "%";
+      document.getElementById("mPrec").textContent   = d.precision + "%";
+      document.getElementById("mRec").textContent    = d.recall + "%";
+      document.getElementById("mArch").textContent   = d.model_type;
+      document.getElementById("mClasses").textContent = d.num_classes;
+      document.getElementById("mTrain").textContent  = d.train_samples.toLocaleString();
+      document.getElementById("mTest").textContent   = d.test_samples.toLocaleString();
+
+      // Per-class cards
+      const grid = document.getElementById("perClassGrid");
+      grid.innerHTML = "";
+      for (const [cls, stats] of Object.entries(d.per_class)) {
+        const color = CLASS_COLORS[cls] || "#00c8ff";
+        grid.innerHTML += `
+          <div class="pc-card" style="border-left: 3px solid ${color}">
+            <div class="pc-name" style="color:${color}">${cls}</div>
+            <div class="pc-stats">
+              <div class="pc-stat"><div class="pc-stat-label">Precision</div><div class="pc-stat-val" style="color:${color}">${stats.precision}%</div></div>
+              <div class="pc-stat"><div class="pc-stat-label">Recall</div><div class="pc-stat-val" style="color:${color}">${stats.recall}%</div></div>
+              <div class="pc-stat"><div class="pc-stat-label">F1</div><div class="pc-stat-val" style="color:${color}">${stats.f1}%</div></div>
+            </div>
+          </div>`;
+      }
+    } catch {}
+  }
+
+  checkHealth();
+  loadMetrics();
+
+  // Drag & drop
+  dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault(); dropZone.classList.remove("dragover");
+    if (e.dataTransfer.files.length) { imageInput.files = e.dataTransfer.files; handleFileSelect(); }
+  });
+  imageInput.addEventListener("change", handleFileSelect);
+
+  function handleFileSelect() {
+    clearState();
+    const file = imageInput.files[0];
+    if (!file) return;
+    preview.src = URL.createObjectURL(file);
+    previewWrap.style.display = "block";
+    predictBtn.disabled = false;
+  }
+
+  function clearState() {
+    errorBox.style.display   = "none";
+    errorBox.textContent     = "";
+    resultData.style.display = "none";
+    resultIdle.style.display = "block";
+    document.getElementById("disclaimer").style.display = "none";
+  }
+
+  function showError(msg) {
+    errorBox.textContent     = "⚠ " + msg;
+    errorBox.style.display   = "block";
+    resultData.style.display = "none";
+    resultIdle.style.display = "block";
+  }
+
+  // Predict
+  predictBtn.addEventListener("click", async () => {
+    if (!imageInput.files.length) return;
+    predictBtn.disabled  = true;
+    predictBtn.innerHTML = '<span class="spinner"></span>Analyzing...';
+    clearState();
+
+    const formData = new FormData();
+    formData.append("file", imageInput.files[0]);
+
+    try {
+      const res  = await fetch("/predict", { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (!data.success) { showError(data.error || "Prediction failed."); return; }
+
+      // Main result
+      document.getElementById("predLabel").textContent = data.prediction;
+      document.getElementById("predLabel").style.color = data.color;
+      document.getElementById("predDesc").textContent  = data.description;
+
+      // Probability bars for all 4 classes
+      const barsContainer = document.getElementById("probBars");
+      barsContainer.innerHTML = "";
+      const probs = data.all_probs;
+      const order = ["Glioma", "Meningioma", "No Tumor", "Pituitary"];
+      order.forEach(cls => {
+        const val   = probs[cls] || 0;
+        const color = CLASS_COLORS[cls];
+        const row   = document.createElement("div");
+        row.className = "prob-row";
+        row.innerHTML = `
+          <div class="prob-header">
+            <span class="prob-name">${cls}</span>
+            <span class="prob-val">${val.toFixed(1)}%</span>
+          </div>
+          <div class="prob-bar-bg">
+            <div class="prob-bar-fill" id="bar-${cls.replace(' ','-')}" style="background:${color}"></div>
+          </div>`;
+        barsContainer.appendChild(row);
+      });
+
+      // Animate bars after DOM update
+      setTimeout(() => {
+        order.forEach(cls => {
+          const bar = document.getElementById("bar-" + cls.replace(' ','-'));
+          if (bar) bar.style.width = (probs[cls] || 0) + "%";
+        });
+      }, 50);
+
+      resultIdle.style.display  = "none";
+      resultData.style.display  = "block";
+      document.getElementById("disclaimer").style.display = "block";
+
+    } catch {
+      showError("Server error. Please try again.");
+    } finally {
+      predictBtn.disabled  = false;
+      predictBtn.innerHTML = "Run Classification";
+    }
+  });
+</script>
+</body>
+</html>
