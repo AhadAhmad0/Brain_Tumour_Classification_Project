@@ -1,131 +1,143 @@
-🧠 Brain Tumor Classification (Deep Learning + Flask):
+# 🧠 Brain Tumor Classification
 
-A web-based application that predicts whether a brain MRI scan contains a tumor using deep learning.
-This project demonstrates an end-to-end machine learning pipeline, including model training, optimization, and real-world deployment handling.
+[![Hugging Face Spaces](https://img.shields.io/badge/🤗%20Hugging%20Face-Live%20Demo-blue)](https://huggingface.co/spaces/AhadAhmad0/Brain-Tumor-Classification)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.19-FF6F00?logo=tensorflow)](https://tensorflow.org)
+[![Python](https://img.shields.io/badge/Python-3.10-3776AB?logo=python)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-2.3.3-000000?logo=flask)](https://flask.palletsprojects.com)
+[![Docker](https://img.shields.io/badge/Docker-Deployed-2496ED?logo=docker)](https://docker.com)
 
-🚀 Live Demo:
-🔗  [Brain Tumor Classification Web App](https://brain-tumour-classification-project-24.onrender.com)
+A deep learning web application that classifies brain MRI scans into 4 tumor categories using **EfficientNetB0** with transfer learning. Deployed on Hugging Face Spaces via Docker.
 
-📌 Project Overview:
+---
 
-This application allows users to:
-1.📤 Upload an MRI brain image
-2.🖼️ View image preview
-3.🧠 Get prediction:
-  ->Tumor
-  ->No Tumor
-  
-📊 View confidence score:
+## 🔴 Live Demo
 
-The system integrates:
-1.Flask (Backend)
-2.HTML/CSS/JS (Frontend)
-3.TensorFlow/Keras (Model Training)
+👉 **[Try it here](https://huggingface.co/spaces/AhadAhmad0/Brain-Tumor-Classification)**
 
-🧠 Model Development Journey:
+Upload any brain MRI scan and get an instant prediction with confidence scores for all 4 classes.
 
-🔹 Initial Approach: VGG19 (Transfer Learning)
-The project initially used a VGG19-based model with frozen layers for feature extraction.
-⚠️ Challenges with VGG Model
-❌ Large model size (hundreds of MB)
-❌ Not suitable for GitHub upload limits
-❌ Slow inference time
-❌ High memory usage during deployment
-❌ TensorFlow/Keras compatibility issues on cloud platforms (Render)
-❌ Serialization/loading errors (e.g., layer config mismatches)
-👉 Result:
-Although VGG performed reasonably well, it was not practical for deployment
+---
 
-🔹 Final Approach: Lightweight Model (MobileNetV2)
-To overcome these issues, the model was redesigned using MobileNetV2.
-✅ Advantages
-✔️ Small model size (~30MB)
-✔️ Faster inference
-✔️ Lower memory usage
-✔️ Deployment-friendly
-✔️ Better compatibility with cloud environments
+## 📊 Model Performance
 
-📊 Model Performance:
-Metric Value
-Training Accuracy
-93.6%
-Validation Accuracy
-88.0%
-These metrics are obtained from the final lightweight model.
+| Metric | Score |
+|--------|-------|
+| Test Accuracy | **87.00%** |
+| Precision (weighted) | **87.30%** |
+| Recall (weighted) | **87.00%** |
+| F1 Score (weighted) | **86.60%** |
 
-⚙️ Model Inference Strategy (Hybrid System):
+### Per-Class Performance
 
-This project uses a hybrid inference approach to ensure reliability across environments.
-🔹 Primary: Model-Based Prediction
-Uses final_model.h5
-Performs real deep learning inference
-Returns prediction + confidence
-🔹 Fallback Mechanism
+| Class | Precision | Recall | F1 Score | Support |
+|-------|-----------|--------|----------|---------|
+| Glioma | 93% | 72% | 81% | 400 |
+| Meningioma | 82% | 78% | 80% | 400 |
+| No Tumor | 86% | 99% | 92% | 400 |
+| Pituitary | 87% | 99% | 93% | 400 |
 
-If the model cannot load due to:
-1.dependency conflicts
-2.environment limitations
-3.TensorFlow compatibility issues
-Then the system:
-->processes the image
-->uses intensity + contrast features
-->returns prediction and confidence
+---
 
-🎯 Why Hybrid?
-1.Ensures application never breaks
-2.Guarantees deployment stability
-3.Demonstrates real-world engineering thinking
-4.Handles practical ML deployment challenges
+## 🗂️ Dataset
 
-🧪 Training Pipeline (Notebook):
+**[Brain Tumor MRI Dataset](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset)** by Masoud Nickparvar
 
-1.The project includes a Jupyter Notebook covering:
-2.Data preprocessing
-3.Image augmentation
-4.Transfer learning (MobileNetV2)
-5.Training & fine-tuning
-6.Model evaluation
-7.Model saving
+| Split | Images |
+|-------|--------|
+| Training | 5,712 |
+| Testing | 1,600 |
+| **Total** | **7,023** |
 
-⚠️ Deployment Note:
+4 classes: `Glioma` · `Meningioma` · `No Tumor` · `Pituitary`
 
-Deep learning models often face deployment challenges due to:
-->environment inconsistencies
-->dependency conflicts
-->hardware limitations
+---
 
-This project addresses those challenges using:
--> a lightweight model
--> a hybrid fallback mechanism
--> The notebook contains the complete ML workflow, while the deployed app ensures consistent usability.
+## 🏗️ Architecture
 
-💡 Key Highlights:
+```
+EfficientNetB0 (ImageNet weights, frozen)
+    └── GlobalAveragePooling2D
+    └── BatchNormalization
+    └── Dense(256, relu)
+    └── Dropout(0.4)
+    └── Dense(128, relu)
+    └── Dropout(0.3)
+    └── Dense(4, softmax)
+```
 
-1.End-to-end ML pipeline
-2.Lightweight optimized model
-3.Flask web application
-4.Hybrid inference system
-5.Real-world deployment handling
-6.Clean and responsive UI
+**Training strategy:**
+- Phase 1 — Frozen base, 10 epochs, lr=1e-3
+- Phase 2 — Fine-tune last 30 layers, 8 epochs, lr=1e-5
+- EarlyStopping + ReduceLROnPlateau callbacks
+- No manual rescaling (EfficientNetB0 handles normalization internally)
 
-🧠 Skills Demonstrated:
+---
 
-1.Deep Learning (CNN, Transfer Learning)
-2.TensorFlow / Keras
-3.Flask Backend Development
-4.Model Deployment
-5.Debugging & Optimization
-6.Practical Problem Solving
+## 📈 Training Curves
 
-🔮 Future Improvements:
+<img width="2085" height="731" alt="training_curves" src="https://github.com/user-attachments/assets/f3999d00-d189-44be-ba1d-59b80b1a1c21" />
 
-1.Multi-class tumor classification
-2.Model quantization (faster inference)
-3.Docker containerization
-4.API-based deployment
-5.Grad-CAM visualization
 
-<img width="1871" height="906" alt="Screenshot 2026-05-26 171624" src="https://github.com/user-attachments/assets/02adad6d-4551-4058-ba42-88bb2a19b5c2" />
+## 🔢 Confusion Matrix
 
-<img width="1895" height="617" alt="Screenshot 2026-05-26 171638" src="https://github.com/user-attachments/assets/a9ab16dd-1ada-43b4-ab24-6042070569ef" />
+<img width="1111" height="882" alt="confusion_matrix" src="https://github.com/user-attachments/assets/b2fa6a9f-9bdf-4251-9df4-3ecc80132e87" />
 
+
+---
+
+## 🚀 Deployment
+
+Deployed on **Hugging Face Spaces** using Docker.
+
+```
+app.py                        # Flask backend
+templates/index.html          # Frontend UI
+brain_tumor_classifier.h5     # Trained model (hosted on HF Spaces)
+Dockerfile                    # Docker configuration
+requirements.txt              # Python dependencies
+```
+
+> **Note:** The model file (`brain_tumor_classifier.h5`, ~32MB) is hosted on Hugging Face Spaces via Git LFS and is not included in this GitHub repository.
+
+---
+
+## ⚙️ Run Locally
+
+```bash
+git clone https://github.com/AhadAhmad0/Brain_Tumour_Classification_Project
+cd Brain_Tumour_Classification_Project
+
+pip install -r requirements.txt
+
+# Download model from Hugging Face and place in project root
+# https://huggingface.co/spaces/AhadAhmad0/Brain-Tumor-Classification
+
+python app.py
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Model | EfficientNetB0 (Transfer Learning) |
+| Framework | TensorFlow 2.19 / Keras 3.13 |
+| Backend | Flask 2.3 |
+| Frontend | HTML, CSS, JavaScript |
+| Deployment | Docker + Hugging Face Spaces |
+| Training | Kaggle (GPU T4 x2) |
+
+---
+
+## ⚠️ Disclaimer
+
+This tool is for **educational and research purposes only**. It is not a medical device and should not be used for clinical diagnosis.
+
+---
+
+## 👤 Author
+
+**Ahad Ahmad**
+- GitHub: [@AhadAhmad0](https://github.com/AhadAhmad0)
+- Email: ahadahmad0701@gmail.com
