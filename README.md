@@ -2,7 +2,7 @@
 
 [![Hugging Face Spaces](https://img.shields.io/badge/🤗%20Hugging%20Face-Live%20Demo-blue)](https://huggingface.co/spaces/AhadAhmad0/Brain-Tumor-Classification)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.19-FF6F00?logo=tensorflow)](https://tensorflow.org)
-[![Python](https://img.shields.io/badge/Python-3.10-3776AB?logo=python)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-2.3.3-000000?logo=flask)](https://flask.palletsprojects.com)
 [![Docker](https://img.shields.io/badge/Docker-Deployed-2496ED?logo=docker)](https://docker.com)
 
